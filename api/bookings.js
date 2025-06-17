@@ -1,34 +1,31 @@
-const express = require('express');
-const router = express.Router();
-const Booking = require ('./lib/Booking');
+import { MongoClient } from 'mongodb';
 
-// GET all bookings
-router.get('/', async (req, res) => {
-  const bookings = await Booking.find();
-  res.json(bookings);
-});
+const client = new MongoClient(process.env.MONGO_URI);
+let db;
 
-// POST new booking with conflict check
-router.post('/', async (req, res) => {
-  const { room, date, start, end, name } = req.body;
-  const newStart = new Date(`${date}T${start}`);
-  const newEnd = new Date(`${date}T${end}`);
+export default async function handler(req, res) {
+  try {
+    if (!db) {
+      await client.connect();
+      db = client.db('meetingdb'); // or your DB name
+    }
 
-  const existing = await Booking.find({ room, date });
+    const bookings = db.collection('bookings');
 
-  const isConflict = existing.some(b => {
-    const bStart = new Date(`${b.date}T${b.start}`);
-    const bEnd = new Date(`${b.date}T${b.end}`);
-    return newStart < bEnd && newEnd > bStart;
-  });
+    if (req.method === 'GET') {
+      const all = await bookings.find().toArray();
+      return res.status(200).json(all);
+    }
 
-  if (isConflict) {
-    return res.status(400).json({ message: 'Slot already booked.' });
+    if (req.method === 'POST') {
+      const newBooking = req.body;
+      await bookings.insertOne(newBooking);
+      return res.status(201).json(newBooking);
+    }
+
+    return res.status(405).json({ message: 'Method not allowed' });
+  } catch (error) {
+    console.error('❌ API Error:', error);
+    return res.status(500).json({ message: 'Internal Server Error' });
   }
-
-  const booking = new Booking({ room, date, start, end, name });
-  await booking.save();
-  res.status(201).json(booking);
-});
-
-module.exports = router;
+}
