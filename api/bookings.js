@@ -1,13 +1,14 @@
 import { MongoClient } from 'mongodb';
 
-const client = new MongoClient(process.env.MONGO_URI);
+const uri = process.env.MONGO_URI;
+const client = new MongoClient(uri);
 let db;
 
 export default async function handler(req, res) {
   try {
     if (!db) {
       await client.connect();
-      db = client.db('meetingdb'); // or your DB name
+      db = client.db('meetingdb'); // use your DB name
     }
 
     const bookings = db.collection('bookings');
@@ -19,13 +20,19 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const newBooking = req.body;
+
+      if (!newBooking || !newBooking.room) {
+        return res.status(400).json({ message: 'Invalid booking data' });
+      }
+
       await bookings.insertOne(newBooking);
-      return res.status(201).json(newBooking);
+      return res.status(201).json({ message: 'Booking added' });
     }
 
     return res.status(405).json({ message: 'Method not allowed' });
-  } catch (error) {
-    console.error('❌ API Error:', error);
+
+  } catch (err) {
+    console.error('❌ API Error:', err);
     return res.status(500).json({ message: 'Internal Server Error' });
   }
 }
