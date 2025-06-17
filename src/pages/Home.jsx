@@ -19,7 +19,7 @@ export default function Home() {
     const npstId = localStorage.getItem('npst_id') || '';
     setFormData(prev => ({ ...prev, name, npstId }));
 
-    axios.get('http://localhost:5000/api/bookings')
+    axios.get('/api/bookings')
       .then(res => setBookings(res.data))
       .catch(console.error);
   }, []);
