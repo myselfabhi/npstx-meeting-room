@@ -1,38 +1,30 @@
-import { MongoClient } from 'mongodb';
+// api/bookings.js
+import mongoose from 'mongoose';
+import Booking from './lib/Booking.js';
 
 const uri = process.env.MONGO_URI;
-const client = new MongoClient(uri);
-let db;
 
 export default async function handler(req, res) {
   try {
-    if (!db) {
-      await client.connect();
-      db = client.db('meetingdb'); // use your DB name
+    // Connect to MongoDB only if not connected already
+    if (mongoose.connection.readyState === 0) {
+      await mongoose.connect(uri);
     }
 
-    const bookings = db.collection('bookings');
-
     if (req.method === 'GET') {
-      const all = await bookings.find().toArray();
-      return res.status(200).json(all);
+      const bookings = await Booking.find();
+      return res.status(200).json(bookings);
     }
 
     if (req.method === 'POST') {
-      const newBooking = req.body;
-
-      if (!newBooking || !newBooking.room) {
-        return res.status(400).json({ message: 'Invalid booking data' });
-      }
-
-      await bookings.insertOne(newBooking);
-      return res.status(201).json({ message: 'Booking added' });
+      const newBooking = await Booking.create(req.body);
+      return res.status(201).json(newBooking);
     }
 
-    return res.status(405).json({ message: 'Method not allowed' });
+    return res.status(405).json({ error: 'Method not allowed' });
 
   } catch (err) {
-    console.error('❌ API Error:', err);
-    return res.status(500).json({ message: 'Internal Server Error' });
+    console.error('❌ Error:', err);
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 }

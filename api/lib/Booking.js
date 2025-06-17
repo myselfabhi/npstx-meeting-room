@@ -1,4 +1,5 @@
-const mongoose = require('mongoose');
+// api/lib/Booking.js
+import mongoose from 'mongoose';
 
 const bookingSchema = new mongoose.Schema({
   room: String,
@@ -8,4 +9,5 @@ const bookingSchema = new mongoose.Schema({
   name: String,
 });
 
-module.exports = mongoose.model('Booking', bookingSchema);
+// Prevent re-registering the model in hot reload/dev
+export default mongoose.models.Booking || mongoose.model('Booking', bookingSchema);
