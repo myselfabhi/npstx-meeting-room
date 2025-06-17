@@ -31,7 +31,7 @@ export default function Home() {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/bookings', formData);
+      const res = await axios.post('/api/bookings', formData);
       setBookings(prev => [...prev, res.data]);
       setMessage({ type: 'success', text: '✅ Room booked successfully!' });
       setFormData(prev => ({ ...prev, room: '', date: '', start: '', end: '' }));
