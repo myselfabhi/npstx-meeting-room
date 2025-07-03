@@ -1,6 +1,6 @@
 // api/bookings.js
 import mongoose from 'mongoose';
-import Booking from './lib/Booking.js';
+import Booking from './Booking.js';
 
 const uri = process.env.MONGO_URI;
 
